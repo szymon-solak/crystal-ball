@@ -1,0 +1,108 @@
+services:
+  db:
+    build:
+      dockerfile: ./environment/postgres/postgres.dockerfile
+    container_name: postgres
+    user: "postgres"
+    healthcheck:
+      test: "pg_isready -U postgres -d tracing"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 5432:5432
+    networks:
+      - shared
+    environment:
+      - POSTGRES_DB=tracing
+      - POSTGRES_PASSWORD=gnicart
+      - LD_LIBRARY_PATH=/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu
+    volumes:
+      - ./environment/postgres/db_init.sql:/docker-entrypoint-initdb.d/00_init.sql
+      - ./environment/postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+    command: |
+      postgres 
+      -c config_file="/etc/postgresql/postgresql.conf"
+
+  prometheus:
+    image: prom/prometheus:v3.9.1
+    container_name: prometheus
+    volumes:
+      - ./environment/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+      - '--web.enable-otlp-receiver'
+    ports:
+      - "9090:9090"
+    networks:
+      - shared
+    restart: unless-stopped
+
+  tempo:
+    image: grafana/tempo:2.10.0
+    container_name: tempo
+    command: [ "-config.file=/etc/tempo.yaml" ]
+    volumes:
+      - ./environment/tempo/tempo.yml:/etc/tempo.yaml
+    ports:
+      - "3200:3200" # tempo
+      - "4317:4317" # otlp grpc
+      - "4318:4318" # otlp http
+    networks:
+      - shared
+    restart: unless-stopped
+    environment:
+     - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318
+
+  alloy:
+    image: grafana/alloy:v1.12.2@sha256:f94b1c82957accb77cd11385fd5e3600758ef1b1ab79557c97319ad28590735a
+    container_name: alloy
+    volumes:
+      - ./environment/alloy/config.alloy:/etc/alloy/config.alloy
+    command:
+      - run
+      - /etc/alloy/config.alloy
+      - --storage.path=/var/lib/alloy/data
+      - --server.http.listen-addr=0.0.0.0:12345
+    environment:
+      - ALLOY_OTLP_UPSTREAM=tempo:4317
+    ports:
+      - "12345:12345"
+      - "4319:4317"
+    depends_on:
+      - tempo
+
+  grafana:
+    image: grafana/grafana:12.4.0-21693836646
+    container_name: grafana
+    user: "472"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./environment/grafana/provisioning:/etc/grafana/provisioning
+      - ./environment/grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3000:3000"
+    networks:
+      - shared
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+      - tempo
+      - alloy
+
+networks:
+  shared:
+    driver: bridge
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}

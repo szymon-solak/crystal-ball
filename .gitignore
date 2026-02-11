@@ -1,0 +1,13 @@
+node_modules
+build
+.direnv
+
+npm-debug.log*
+**/*.trace
+**/*.zip
+**/*.tar.gz
+**/*.tgz
+**/*.log
+**/*.bun
+.DS_Store
+*.pem
