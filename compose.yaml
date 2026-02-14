@@ -1,11 +1,23 @@
 services:
+  app:
+    build:
+      context: ./app
+      dockerfile: app.dockerfile
+    ports:
+      - 3007:3007
+    networks:
+      - shared
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     build:
       dockerfile: ./environment/postgres/postgres.dockerfile
     container_name: postgres
     user: "postgres"
     healthcheck:
-      test: "pg_isready -U postgres -d tracing"
+      test: "pg_isready -U tracing -d tracing"
       interval: 10s
       timeout: 5s
       retries: 5
@@ -15,6 +27,7 @@ services:
       - shared
     environment:
       - POSTGRES_DB=tracing
+      - POSTGRES_USER=tracing
       - POSTGRES_PASSWORD=gnicart
       - LD_LIBRARY_PATH=/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu
     volumes:
@@ -74,6 +87,8 @@ services:
     ports:
       - "12345:12345"
       - "4319:4317"
+    networks:
+      - shared
     depends_on:
       - tempo
 
