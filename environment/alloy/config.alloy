@@ -7,15 +7,22 @@ otelcol.receiver.otlp "otlp_receiver" {
   }
 
   output {
-    traces = [otelcol.exporter.otlp.grafanacloud.input,]
+    traces = [
+      otelcol.exporter.otlp.tempo.input,
+    ]
   }
 }
 
-otelcol.exporter.otlp "grafanacloud" {
+otelcol.exporter.otlp "tempo" {
   client {
     endpoint = env("ALLOY_OTLP_UPSTREAM")
     tls {
       insecure = true
+      insecure_skip_verify = true
     }
   }
+}
+
+livedebugging {
+    enabled = true
 }

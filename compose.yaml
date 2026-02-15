@@ -7,6 +7,9 @@ services:
       - 3007:3007
     networks:
       - shared
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318
+      - DATABASE_URL=postgres://tracing:gnicart@postgres:5432/tracing
     depends_on:
       db:
         condition: service_healthy
@@ -69,8 +72,6 @@ services:
     networks:
       - shared
     restart: unless-stopped
-    environment:
-     - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318
 
   alloy:
     image: grafana/alloy:v1.12.2@sha256:f94b1c82957accb77cd11385fd5e3600758ef1b1ab79557c97319ad28590735a
@@ -83,10 +84,9 @@ services:
       - --storage.path=/var/lib/alloy/data
       - --server.http.listen-addr=0.0.0.0:12345
     environment:
-      - ALLOY_OTLP_UPSTREAM=tempo:4317
+      - ALLOY_OTLP_UPSTREAM=http://tempo:4317
     ports:
       - "12345:12345"
-      - "4319:4317"
     networks:
       - shared
     depends_on:

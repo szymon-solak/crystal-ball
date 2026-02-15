@@ -1,33 +1,25 @@
 import { opentelemetry } from "@elysiajs/opentelemetry";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
-import { SQL } from "bun";
 import { Elysia } from "elysia";
+import { createDb } from "./db";
 
-const db = new SQL("postgres://tracing:gnicart@postgres:5432/tracing");
+const db = createDb();
 
 const app = new Elysia()
 	.use(
 		opentelemetry({
-			spanProcessors: [
-				new BatchSpanProcessor(
-					new OTLPTraceExporter({
-						url: "http://tempo:4318/v1/traces",
-					}),
-				),
-			],
+			spanProcessors: [new BatchSpanProcessor(new OTLPTraceExporter())],
 		}),
 	)
 	.get("/", () => "Hello Elysia")
 	.get("/random", () => Math.random())
 	.get("/health", async () => {
-		try {
-			const res = await db`SELECT 1 + 1;`;
-			console.log(res);
-		} catch (error) {
-			console.log(error)
-		}
+		await db.query`SELECT 1 + 2;`;
 
+		await db.begin(async (tx) => {
+			return tx`SELECT 1 + 1;`;
+		});
 
 		return { ok: true };
 	})
