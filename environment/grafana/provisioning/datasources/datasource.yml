@@ -11,3 +11,13 @@ datasources:
     type: tempo
     access: proxy
     url: http://tempo:3200
+
+  - name: Postgres
+    type: postgres
+    url: db:5432
+    user: grafanareader
+    secureJsonData:
+      password: 'password'
+    jsonData:
+      database: tracing
+      sslmode: 'disable'

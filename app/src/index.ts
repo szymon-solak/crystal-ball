@@ -6,6 +6,34 @@ import { createDb } from "./db";
 
 const db = createDb();
 
+const movieRouter = new Elysia()
+	.get("/movies", async () => {
+		const movies =
+			await db.query`select movie_id, title, release_year from movie;`;
+
+		return movies;
+	})
+	.get("/movies/:movieId", async ({ params: { movieId }, status }) => {
+		const [movie] =
+			await db.query`select movie_id, title, release_year from movie where movie_id = ${movieId};`;
+
+		if (!movie) {
+			return status(404);
+		}
+
+		return movie;
+	});
+
+const userRouter = new Elysia().get(
+	"/users/:userId/seen-movies",
+	async ({ params: { userId } }) => {
+		const movies =
+			await db.query`select movie.movie_id, title, release_year from movie_view left join movie on movie_view.movie_id = movie.movie_id where user_id = ${userId};`;
+
+		return movies;
+	},
+);
+
 const app = new Elysia()
 	.use(
 		opentelemetry({
@@ -13,7 +41,8 @@ const app = new Elysia()
 		}),
 	)
 	.get("/", () => "Hello Elysia")
-	.get("/random", () => Math.random())
+	.use(movieRouter)
+	.use(userRouter)
 	.get("/health", async () => {
 		await db.query`SELECT 1 + 2;`;
 

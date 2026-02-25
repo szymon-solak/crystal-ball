@@ -3,13 +3,14 @@ services:
     build:
       context: ./app
       dockerfile: app.dockerfile
+    profiles: [app]
     ports:
       - 3007:3007
     networks:
       - shared
     environment:
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://alloy:4318
-      - DATABASE_URL=postgres://tracing:gnicart@postgres:5432/tracing
+      - DATABASE_URL=postgres://app:password@postgres:5432/tracing
     depends_on:
       db:
         condition: service_healthy
