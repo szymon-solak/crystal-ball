@@ -3,10 +3,11 @@ import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { Elysia } from "elysia";
 import { createDb } from "./db/client";
+import { createLoggerMiddleware } from "./logger";
 import { createMovieRouter } from "./movies";
 
 interface AppConfig {
-	port: number
+	port: number;
 }
 
 export async function createApp(appConfig: AppConfig) {
@@ -25,6 +26,12 @@ export async function createApp(appConfig: AppConfig) {
 	);
 
 	const app = new Elysia()
+		.use(
+			createLoggerMiddleware({
+				level: "debug",
+				pretty: process.env.NODE_ENV !== "production",
+			}),
+		)
 		.use(
 			opentelemetry({
 				spanProcessors: [new BatchSpanProcessor(new OTLPTraceExporter())],
@@ -46,4 +53,3 @@ export async function createApp(appConfig: AppConfig) {
 
 	return app;
 }
-

@@ -7,14 +7,17 @@ INSERT INTO public.movie (movie_id, title, release_year) VALUES
 	(6, 'Goodfellas', 1990),
 	(7, 'Trainspotting', 1996),
 	(8, 'Drive', 2011)
-ON CONFLICT (movie_id) DO UPDATE;
+ON CONFLICT (movie_id) DO UPDATE SET
+	title = excluded.title,
+	release_year = excluded.release_year;
 
 INSERT INTO public.user (user_id, name) VALUES
 	(1, 'Ryan'),
 	(2, 'John'),
 	(3, 'Julie'),
 	(4, 'Susan')
-ON CONFLICT (user_id) DO UPDATE;
+ON CONFLICT (user_id) DO UPDATE SET
+	name = excluded.name;
 
 INSERT INTO public.movie_view (user_id, movie_id) VALUES
 	(1, 1),
