@@ -1,20 +1,48 @@
+import { getCurrentSpan } from "@elysiajs/opentelemetry";
 import Elysia from "elysia";
 import pino from "pino";
 
 interface LoggerOptions {
+	serviceName: string;
 	level: pino.Level;
 	pretty: boolean;
 }
 
 function createLogger(options: LoggerOptions) {
-	const logger = pino({
-		level: options.level,
-		transport: options.pretty
-			? {
-					target: "pino-pretty",
-				}
-			: undefined,
-	});
+	const streams = [
+		options.pretty
+			? [
+					pino.transport({
+						target: "pino-pretty",
+						level: options.level,
+						options: {
+							colorize: true,
+							levelFirst: true,
+							translateTime: "HH:MM:ss",
+						},
+					}),
+				]
+			: [],
+
+		[
+			pino.transport({
+				target: "pino-opentelemetry-transport",
+				level: options.level,
+				options: {
+					resourceAttributes: {
+						"service.name": options.serviceName,
+					},
+				},
+			}),
+		],
+	].flat();
+
+	const logger = pino(
+		{
+			level: "debug",
+		},
+		pino.multistream(streams),
+	);
 
 	return logger;
 }
@@ -42,11 +70,16 @@ export function createLoggerMiddleware(options: LoggerOptions) {
 			};
 		})
 		.onAfterResponse((ctx) => {
+			const span = getCurrentSpan()?.spanContext();
+
 			logger.info({
 				duration: performance.now() - (ctx.startTime ?? 0),
 				error: "error" in ctx ? ctx.error?.toString() : undefined,
 				route: ctx.route,
 				req: serializeRequest(ctx.request),
+				trace_id: span?.traceId,
+				span_id: span?.spanId,
+				trace_flags: span?.traceFlags,
 			});
 		})
 		.as("global");

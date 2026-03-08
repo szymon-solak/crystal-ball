@@ -7,6 +7,7 @@ import { createLoggerMiddleware } from "./logger";
 import { createMovieRouter } from "./movies";
 
 interface AppConfig {
+	serviceName: string;
 	port: number;
 }
 
@@ -30,11 +31,13 @@ export async function createApp(appConfig: AppConfig) {
 			createLoggerMiddleware({
 				level: "debug",
 				pretty: process.env.NODE_ENV !== "production",
+				serviceName: appConfig.serviceName,
 			}),
 		)
 		.use(
 			opentelemetry({
 				spanProcessors: [new BatchSpanProcessor(new OTLPTraceExporter())],
+				serviceName: appConfig.serviceName,
 			}),
 		)
 		.get("/", () => "Hello Elysia")

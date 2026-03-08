@@ -10,12 +10,25 @@ otelcol.receiver.otlp "otlp_receiver" {
     traces = [
       otelcol.exporter.otlp.tempo.input,
     ]
+    logs = [
+      otelcol.exporter.otlphttp.loki.input,
+    ]
   }
 }
 
 otelcol.exporter.otlp "tempo" {
   client {
-    endpoint = env("ALLOY_OTLP_UPSTREAM")
+    endpoint = env("ALLOY_OTLP_TRACES_UPSTREAM")
+    tls {
+      insecure = true
+      insecure_skip_verify = true
+    }
+  }
+}
+
+otelcol.exporter.otlphttp "loki" {
+  client {
+    endpoint = env("ALLOY_OTLP_LOGS_UPSTREAM")
     tls {
       insecure = true
       insecure_skip_verify = true
