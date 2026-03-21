@@ -11,6 +11,8 @@ ON CONFLICT (movie_id) DO UPDATE SET
 	title = excluded.title,
 	release_year = excluded.release_year;
 
+SELECT pg_catalog.setval(pg_get_serial_sequence('public.movie', 'movie_id'), MAX(movie_id)) FROM public.movie;
+
 INSERT INTO public.user (user_id, name) VALUES
 	(1, 'Ryan'),
 	(2, 'John'),
@@ -18,6 +20,8 @@ INSERT INTO public.user (user_id, name) VALUES
 	(4, 'Susan')
 ON CONFLICT (user_id) DO UPDATE SET
 	name = excluded.name;
+
+SELECT pg_catalog.setval(pg_get_serial_sequence('public.user', 'user_id'), MAX(user_id)) FROM public.user;
 
 INSERT INTO public.movie_view (user_id, movie_id) VALUES
 	(1, 1),

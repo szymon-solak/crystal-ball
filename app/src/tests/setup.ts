@@ -13,5 +13,12 @@ beforeAll(async () => {
 		await tx`INSERT INTO public.movie ${db.wrap(movies)}`;
 		await tx`INSERT INTO public.user ${db.wrap(users)}`;
 		await tx`INSERT INTO public.movie_view ${db.wrap(views)}`;
+
+		await tx`
+			SELECT pg_catalog.setval(pg_get_serial_sequence('public.movie', 'movie_id'), MAX(movie_id)) FROM public.movie;
+		`;
+		await tx`
+			SELECT pg_catalog.setval(pg_get_serial_sequence('public.user', 'user_id'), MAX(user_id)) FROM public.user;
+		`;
 	});
 });

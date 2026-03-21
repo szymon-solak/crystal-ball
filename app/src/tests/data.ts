@@ -1,4 +1,4 @@
-import type { Movie } from "../movies";
+import type { Movie } from "../types";
 
 export const users = [
 	{ user_id: 1, name: "Peter" },

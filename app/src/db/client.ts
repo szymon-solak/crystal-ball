@@ -6,6 +6,12 @@ interface Carrier {
 	traceparent?: string;
 }
 
+type IsolationLevel =
+	| "READ UNCOMMITED"
+	| "READ COMMITTED"
+	| "REPEATABLE READ"
+	| "SERIALIZABLE";
+
 export interface Database {
 	seed: () => Promise<void>;
 
@@ -18,6 +24,7 @@ export interface Database {
 
 	begin: <TResult>(
 		callback: (tx: Bun.TransactionSQL) => Promise<TResult>,
+		isolation?: IsolationLevel,
 	) => Promise<TResult>;
 }
 
@@ -40,11 +47,11 @@ export function createDb(connectionString?: string): Database {
 			return db`${db.unsafe(`/*traceparent='${output.traceparent}'*/`)}${db(strings, ...values)}`;
 		},
 
-		async begin(callback) {
+		async begin(callback, isolation = "READ COMMITTED") {
 			const output: Carrier = {};
 			propagation.inject(context.active(), output);
 
-			return db.transaction(async (tx) => {
+			return db.transaction(`ISOLATION LEVEL ${isolation}`, async (tx) => {
 				if (output.traceparent) {
 					await tx`SET LOCAL pg_tracing.trace_context='traceparent=''${tx.unsafe(`${output.traceparent}`)}''';`;
 				}
