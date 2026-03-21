@@ -71,16 +71,23 @@ export function createLoggerMiddleware(options: LoggerOptions) {
 		})
 		.onAfterResponse((ctx) => {
 			const span = getCurrentSpan()?.spanContext();
+			const duration = ctx.startTime
+				? performance.now() - ctx.startTime
+				: undefined;
 
-			logger.info({
-				duration: performance.now() - (ctx.startTime ?? 0),
-				error: "error" in ctx ? ctx.error?.toString() : undefined,
-				route: ctx.route,
-				req: serializeRequest(ctx.request),
-				trace_id: span?.traceId,
-				span_id: span?.spanId,
-				trace_flags: span?.traceFlags,
-			});
+			logger.info(
+				{
+					startTime: ctx.startTime,
+					duration,
+					error: "error" in ctx ? ctx.error?.toString() : undefined,
+					route: ctx.route,
+					req: serializeRequest(ctx.request),
+					trace_id: span?.traceId,
+					span_id: span?.spanId,
+					trace_flags: span?.traceFlags,
+				},
+				`${ctx.route ?? ctx.request.url} ${duration ? `done in ${duration.toFixed(0)}ms` : ""}`,
+			);
 		})
 		.as("global");
 }
