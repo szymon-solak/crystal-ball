@@ -3,6 +3,7 @@ services:
     build:
       context: ./app
       dockerfile: app.dockerfile
+    container_name: app
     profiles: [app]
     ports:
       - 3007:3007
@@ -19,6 +20,7 @@ services:
     build:
       dockerfile: ./environment/postgres/postgres.dockerfile
     container_name: postgres
+    profiles: [services]
     user: "postgres"
     healthcheck:
       test: "pg_isready -U tracing -d tracing"
@@ -44,6 +46,7 @@ services:
   prometheus:
     image: prom/prometheus:v3.9.1
     container_name: prometheus
+    profiles: [telemetry]
     volumes:
       - ./environment/prometheus:/etc/prometheus
       - prometheus_data:/prometheus
@@ -63,6 +66,7 @@ services:
   tempo:
     image: grafana/tempo:2.10.0
     container_name: tempo
+    profiles: [telemetry]
     command: [ "-config.file=/etc/tempo.yaml" ]
     volumes:
       - ./environment/tempo/tempo.yml:/etc/tempo.yaml
@@ -75,6 +79,7 @@ services:
   alloy:
     image: grafana/alloy:v1.12.2@sha256:f94b1c82957accb77cd11385fd5e3600758ef1b1ab79557c97319ad28590735a
     container_name: alloy
+    profiles: [telemetry]
     volumes:
       - ./environment/alloy/config.alloy:/etc/alloy/config.alloy
     command:
@@ -97,6 +102,7 @@ services:
   loki:
     image: grafana/loki:3.6.7
     container_name: loki
+    profiles: [telemetry]
     volumes:
       - loki_data:/loki
       - ./environment/loki/loki-config.yaml:/etc/loki/local-config.yaml
@@ -110,6 +116,7 @@ services:
   grafana:
     image: grafana/grafana:12.4.0-21693836646
     container_name: grafana
+    profiles: [telemetry]
     user: "472"
     volumes:
       - grafana_data:/var/lib/grafana
