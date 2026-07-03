@@ -15,5 +15,8 @@ jobs:
       - name: Setup Nix
         uses: nixbuild/nix-quick-install-action@v34
 
+      - name: Prepare nix shell
+        run: nix develop .#ci --command true
+
       - name: Check
-        run: nix develop --command biome check ./app
+        run: nix develop .#ci --command biome check ./app

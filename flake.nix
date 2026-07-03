@@ -14,16 +14,22 @@
     flake-utils.lib.eachDefaultSystem (system: let
       pkgs = import nixpkgs {inherit system;};
     in {
+      devShells.ci = pkgs.mkShell {
+        name = "bun-ci";
+
+        buildInputs = [
+          pkgs.bun
+          pkgs.biome
+        ];
+      };
+
       devShells.default = pkgs.mkShell {
         name = "bun";
 
         buildInputs = [
           pkgs.bun
-					pkgs.nodejs_24
-          pkgs.nodePackages.typescript
-          pkgs.nodePackages.typescript-language-server
-          pkgs.nodePackages.vscode-langservers-extracted
           pkgs.biome
+          pkgs.nodePackages.vscode-langservers-extracted
 					pkgs.typescript-go
         ];
       };
