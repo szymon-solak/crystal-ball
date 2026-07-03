@@ -13,7 +13,7 @@ jobs:
           fetch-depth: 0
 
       - name: Start db and app
-        run: docker compose --profile services --profile app up -d --wait
+        run: docker compose -p tracing --profile services --profile app up -d --wait
 
       - name: Run k6
         run: |
