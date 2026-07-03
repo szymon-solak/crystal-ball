@@ -21,4 +21,4 @@ jobs:
       - name: Test
         env:
           DATABASE_URL: postgres://app:password@localhost:5432/tracing
-        run: nix develop --command bash -c "cd app && bun test"
+        run: nix develop --command bash -c "cd app && bun install && bun test"
