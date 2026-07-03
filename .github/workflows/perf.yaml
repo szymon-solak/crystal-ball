@@ -15,6 +15,9 @@ jobs:
       - name: Start db and app
         run: docker compose -p tracing --profile services --profile app up -d --wait
 
+      - name: Debug containers
+        run: docker ps -a && docker logs app
+
       - name: Run k6
         run: |
           docker run --rm \
