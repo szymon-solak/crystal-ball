@@ -13,15 +13,13 @@ jobs:
           fetch-depth: 0
 
       - name: Start db and app
-        run: docker compose -p tracing --profile services --profile app up -d --wait
+        run: docker compose --profile services --profile app up -d --wait
 
-      - name: Debug containers
-        run: docker ps -a && docker logs app
+      - name: Setup Nix
+        uses: nixbuild/nix-quick-install-action@v34
+
+      - name: Prepare nix shell
+        run: nix develop .#ci --command true
 
       - name: Run k6
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}/k6:/scripts \
-            -e BASE_URL=http://app:3007 \
-            --network tracing_shared \
-            grafana/k6:latest run /scripts/script.js
+        run: nix develop .#ci --command k6 run k6/script.js

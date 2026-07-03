@@ -1,6 +1,6 @@
-import { join } from "node:path";
 import { context, propagation } from "@opentelemetry/api";
 import { SQL } from "bun";
+import seedSqlPath from "./seed.sql" with { type: "file" };
 
 interface Carrier {
 	traceparent?: string;
@@ -33,7 +33,7 @@ export function createDb(connectionString?: string): Database {
 
 	return {
 		async seed() {
-			return db.file(join(import.meta.dir, "seed.sql"));
+			return db.file(seedSqlPath);
 		},
 
 		wrap(values) {
