@@ -1,0 +1,25 @@
+name: Perf
+
+on: [push]
+
+jobs:
+  perf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Start db and app
+        run: docker compose --profile services --profile app up -d --wait
+
+      - name: Setup Nix
+        uses: nixbuild/nix-quick-install-action@v34
+
+      - name: Prepare nix shell
+        run: nix develop .#ci --command true
+
+      - name: Run k6
+        run: nix develop .#ci --command k6 run k6/script.js

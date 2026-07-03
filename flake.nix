@@ -15,11 +15,12 @@
       pkgs = import nixpkgs {inherit system;};
     in {
       devShells.ci = pkgs.mkShell {
-        name = "bun-ci";
+        name = "ci";
 
         buildInputs = [
           pkgs.bun
           pkgs.biome
+          pkgs.k6
         ];
       };
 
@@ -31,6 +32,7 @@
           pkgs.biome
           pkgs.nodePackages.vscode-langservers-extracted
 					pkgs.typescript-go
+					pkgs.k6
         ];
       };
     });
