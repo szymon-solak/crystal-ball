@@ -44,6 +44,18 @@ services:
       postgres 
       -c config_file="/etc/postgresql/postgresql.conf"
 
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: postgres-exporter
+    profiles: [telemetry]
+    environment:
+      - DATA_SOURCE_NAME=postgres://app:password@postgres:5432/tracing?sslmode=disable
+    ports:
+      - "9187:9187"
+    networks:
+      - shared
+    restart: unless-stopped
+
   prometheus:
     image: prom/prometheus:v3.9.1
     container_name: prometheus
