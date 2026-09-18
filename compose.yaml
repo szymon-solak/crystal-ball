@@ -70,6 +70,7 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
       - '--web.enable-lifecycle'
       - '--web.enable-otlp-receiver'
+      - '--web.enable-remote-write-receiver'
     ports:
       - "9090:9090"
     networks:

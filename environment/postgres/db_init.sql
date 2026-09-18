@@ -43,6 +43,8 @@ CREATE TABLE IF NOT EXISTS public.user (
 CREATE TABLE IF NOT EXISTS public.movie_view (
 	user_id integer NOT NULL,
 	movie_id integer NOT NULL,
+	seen_at timestamp without time zone DEFAULT now() NOT NULL,
+	unseen_at timestamp without time zone,
 
 	PRIMARY KEY (user_id, movie_id)
 );

@@ -1,5 +1,12 @@
 import { opentelemetry } from "@elysiajs/opentelemetry";
+import type { Context, TimeInput } from "@opentelemetry/api";
+import { SpanStatusCode } from "@opentelemetry/api";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
+import type {
+	ReadableSpan,
+	Span,
+	SpanProcessor,
+} from "@opentelemetry/sdk-trace-base";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { Elysia } from "elysia";
 import { createDb } from "./db/client";
@@ -7,6 +14,29 @@ import { createHealthRouter } from "./health";
 import { createLoggerMiddleware } from "./logger";
 import { createMovieRouter } from "./movies";
 import { createUserRouter } from "./users";
+
+class HttpErrorStatusProcessor implements SpanProcessor {
+	onStart(span: Span, _parentContext: Context): void {
+		const _end = span.end.bind(span);
+		span.end = (endTime?: TimeInput) => {
+			const statusCode = span.attributes["http.response.status_code"];
+			if (typeof statusCode === "number" && statusCode >= 500) {
+				span.setStatus({
+					code: SpanStatusCode.ERROR,
+					message: `HTTP ${statusCode}`,
+				});
+			}
+			_end(endTime);
+		};
+	}
+	onEnd(_span: ReadableSpan): void {}
+	shutdown(): Promise<void> {
+		return Promise.resolve();
+	}
+	forceFlush(): Promise<void> {
+		return Promise.resolve();
+	}
+}
 
 interface AppConfig {
 	serviceName: string;
@@ -28,7 +58,10 @@ export async function createApp(appConfig: AppConfig) {
 		)
 		.use(
 			opentelemetry({
-				spanProcessors: [new BatchSpanProcessor(new OTLPTraceExporter())],
+				spanProcessors: [
+					new HttpErrorStatusProcessor(),
+					new BatchSpanProcessor(new OTLPTraceExporter()),
+				],
 				serviceName: appConfig.serviceName,
 			}),
 		)
